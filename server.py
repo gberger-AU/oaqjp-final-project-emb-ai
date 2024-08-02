@@ -10,7 +10,6 @@ def emo_detector():
 
     # Pass the text to the emotion_detector function and store the response
     status_code, response = emotion_detector(text_to_analyze)
-    print("|" + str(response['dominant_emotion']) + "|")
 
     if status_code == 400:
         rDict = {key: None for key in ["anger", "disgust", "fear", "joy", "sadness", "dominant_emotion"]}

@@ -14,46 +14,30 @@ def emotion_detector(text_to_analyze):
     # Sending a POST request to the sentiment analysis API
     response = requests.post(url, json=myobj, headers=header)
 
-    if response.status_code != 200:
-        # Return the status code and an empty dictionary in case of error
-        return response.status_code, {
-            'anger': None,
-            'disgust': None,
-            'fear': None,
-            'joy': None,
-            'sadness': None,
-            'dominant_emotion': None
-        }
+    # Default response for error cases
+    default_response = {
+        'anger': None,
+        'disgust': None,
+        'fear': None,
+        'joy': None,
+        'sadness': None,
+        'dominant_emotion': None
+    }
 
-    # Parsing the JSON response from the API
-    formatted_response = json.loads(response.text)
+    if response.status_code != 200:
+        return response.status_code, default_response
+
+    formatted_response = response.json()
+
+    # Check if the response contains emotion predictions
+    if 'emotionPredictions' not in formatted_response:
+        return 400, default_response
+
     emotion_data = formatted_response['emotionPredictions'][0]['emotion']
 
     # Extracting sentiment label and score from the response
-    anger_score = emotion_data['anger']
-    disgust_score = emotion_data['disgust']
-    fear_score = emotion_data['fear']
-    joy_score = emotion_data['joy']
-    sadness_score = emotion_data['sadness']
-
-    # Create a dictionary mapping emotion names to their scores
-    emotion_scores = {
-        'anger': anger_score,
-        'disgust': disgust_score,
-        'fear': fear_score,
-        'joy': joy_score,
-        'sadness': sadness_score
-    }
-
-    # Find the emotion with the maximum score
+    emotion_scores = {emotion: score for emotion, score in emotion_data.items()}
     max_emotion = max(emotion_scores, key=emotion_scores.get)
 
-    # Returning a dictionary containing sentiment analysis results
-    return response.status_code, {
-    'anger': anger_score,
-    'disgust': disgust_score,
-    'fear': fear_score,
-    'joy': joy_score,
-    'sadness': sadness_score,
-    'dominant_emotion': max_emotion
-    }
+    # Returning the status code and a dictionary containing sentiment analysis results
+    return response.status_code, {**emotion_scores, 'dominant_emotion': max_emotion}
